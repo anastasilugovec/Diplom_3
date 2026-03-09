@@ -1,12 +1,8 @@
 import allure
 from locators.lenta_page_locators import LentaPageLocators
 from pages.base_page import BasePage
-from selenium.webdriver.common.by import By
-
 
 class Lenta(BasePage):
-    def __init__(self, driver):
-        super().__init__(driver)
 
     @allure.step("Получить общее количество заказов за все время")
     def get_all_time_order_count(self):
@@ -18,28 +14,27 @@ class Lenta(BasePage):
         self.wait_element(LentaPageLocators.COUNT_TO_DAY)
         return int(self.find_element(LentaPageLocators.COUNT_TO_DAY).text)
 
+    @allure.step("Проверить наличие текста 'Все заказы готовы'")
+    def is_all_orders_ready_text_present(self):
+        try:
+            element = self.find_element(LentaPageLocators.ALL_ORDERS_READY_TEXT)
+            return element.is_displayed()
+        except:
+            return False
+
     @allure.step("Получить список номеров заказов")
     def get_order_list(self):
         orders = []
 
         try:
-            # Пробуем найти реальные номера заказов (только цифры)
+            # Ищем карточки заказов
             elements = self.find_elements(LentaPageLocators.LIST_ORDER)
             if elements:
+                # Отфильтровываем только цифровые номера заказов
                 orders = [order.text for order in elements if order.text.strip() and order.text.strip().isdigit()]
-                print(f"Найдено заказов: {len(orders)}")
                 return orders
-        except Exception as e:
-            print(f"Ошибка при поиске заказов: {e}")
-
-        # Если не нашли заказов, проверяем есть ли текст "Все заказы готовы"
-        try:
-            ready_text_element = self.find_element(LentaPageLocators.ALL_ORDERS_READY_TEXT)
-            if ready_text_element:
-                print("Все заказы готовы - нет заказов в работе")
-                return []
         except:
-            print("Нет заказов в работе")
+            pass
 
         return orders
 
@@ -53,32 +48,25 @@ class Lenta(BasePage):
     @allure.step("Ожидать появления списка заказов")
     def wait_for_order_list(self, timeout=20):
         try:
-            self.wait_element(LentaPageLocators.LIST_ORDER)
+            self.wait_element(LentaPageLocators.LIST_ORDER, timeout=timeout)
             return True
         except:
             return False
 
-    @allure.step("Скроллить к списку заказов")
-    def scroll_to_order_list(self):
+    @allure.step("Скроллить к секции 'В работе'")
+    def scroll_to_in_progress_section(self):
         try:
-            # Сначала пробуем найти секцию "В работе"
-            self.wait_element(LentaPageLocators.IN_PROGRESS_SECTION)
-            self.scroll_to_the_element(LentaPageLocators.IN_PROGRESS_SECTION)
-            print("Скролл к секции 'В работе' выполнен")
-        except Exception as e:
-            print(f"Не удалось найти секцию 'В работе': {e}")
-            # Скролл вниз страницы
+            if self.element_is_displayed(LentaPageLocators.IN_PROGRESS_SECTION):
+                self.scroll_to_the_element(LentaPageLocators.IN_PROGRESS_SECTION)
+            else:
+                self.driver.execute_script("window.scrollTo(0, 400);")
+        except:
             self.driver.execute_script("window.scrollTo(0, 400);")
-            print("Выполнен скролл на 400px")
 
-    @allure.step("Получить все видимые тексты на странице для отладки")
+    @allure.step("Получить все видимые тексты на странице")
     def get_all_visible_texts(self):
-        """Метод для отладки - показывает все тексты на странице"""
         try:
-            body = self.find_element((By.TAG_NAME, "body"))
+            body = self.find_element(LentaPageLocators.BODY_ELEMENT)
             return body.text
         except:
             return ""
-
-    def open(self, url):
-        self.driver.get(url)

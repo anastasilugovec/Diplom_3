@@ -4,13 +4,14 @@ from locators.base_page_locators import BasePageLocators
 from pages.base_page import BasePage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver import ActionChains
 
 class Construct(BasePage):
     def __init__(self, driver: object) -> None:
         super().__init__(driver)
 
     def open(self, url):
-        self.driver.get(url)
+        self._driver.get(url)  # использовано через свойство _driver
 
     @allure.step("Создание заказа бургера")
     def create_order_burger(self, element):
@@ -43,16 +44,12 @@ class Construct(BasePage):
 
     @allure.step("Добавить булку в заказ")
     def add_bun_to_order(self):
-        wait = WebDriverWait(self.driver, 15)
-        # Ждем появления и видимости элемента-источника
+        wait = WebDriverWait(self._driver, 15)
         source_element = wait.until(EC.visibility_of_element_located(ConstructPageLocators.BUN_INGRIDIENT))
-        # Ждем появления и видимости элемента-цели
         target_element = wait.until(EC.visibility_of_element_located(ConstructPageLocators.BURGER_ORDER_LIST))
-
-        # Выполняем перетаскивание
-        from selenium.webdriver import ActionChains
-        action = ActionChains(self.driver)
+        action = ActionChains(self._driver)
         action.drag_and_drop(source_element, target_element).perform()
+
     @allure.step("Проверить отображение текста конструктора")
     def is_burger_constructor_displayed(self):
         return self.element_is_displayed(ConstructPageLocators.TEXT_BURGER_CONSTRUCT)
@@ -61,6 +58,7 @@ class Construct(BasePage):
     def wait_for_ingredients_loaded(self):
         self.wait_element(ConstructPageLocators.BUN_INGRIDIENT)
         self.wait_element_clickable(ConstructPageLocators.BUN_INGRIDIENT)
+
     @allure.step("Ожидать изменения номера заказа")
     def wait_for_order_number_changed(self, initial_number):
         self.wait_text_changed(ConstructPageLocators.NUMBER_ORDER, initial_number)

@@ -3,10 +3,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 
-
 class BasePage:
     def __init__(self, driver):
         self.driver = driver
+
+    @property
+    def _driver(self):
+        return self.driver
 
     def open(self, url):
         self.driver.get(url)
@@ -50,12 +53,7 @@ class BasePage:
 
     def drag_and_drop(self, source_locator, target_locator):
         wait = WebDriverWait(self.driver, 15)
-        # Ждем появления и видимости источника
         source_element = wait.until(EC.visibility_of_element_located(source_locator))
-        # Ждем появления и видимости цели
         target_element = wait.until(EC.visibility_of_element_located(target_locator))
-
-        # Выполняем перетаскивание
-        from selenium.webdriver import ActionChains
         action = ActionChains(self.driver)
         action.drag_and_drop(source_element, target_element).perform()
