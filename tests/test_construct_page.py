@@ -1,43 +1,45 @@
+from pages.base_page import BasePage
+from pages.construct_page import Construct
 import pytest
 import allure
 
-
-class TestLentaPage():
-
-    @allure.title("Проверка, что заказ появляется в списке 'В работе' после создания")
-    def test_order_appears_in_work_list(self, driver, login_user, urls):
-        profile_page = Profile(driver)
+class TestConstructPage():
+    @allure.title("Проверка перехода в Конструктор через кнопку в шапке сайта")
+    def test_construct_button_click(self, driver, urls):
+        base_page = BasePage(driver)
+        base_page.get_urls(urls.STELLAR_BURGER_LENTA)
+        base_page.click_construct_button()
         construct_page = Construct(driver)
-        lenta_page = Lenta(driver)
+        assert construct_page.is_burger_constructor_displayed()
 
-        # Открываем страницу конструктора и логинимся
-        construct_page.open(urls.STELLAR_BURGER_CONSTRUCT)
-        profile_page.login_in_main_page(login_user["email"], login_user["password"])
+    @allure.title("Проверка открытия модального окна с деталями ингредиента")
+    def test_window_ingridient_in_display(self, driver, urls):
+        construct_page = Construct(driver)
+        construct_page.get_urls(urls.STELLAR_BURGER_CONSTRUCT)
+        construct_page.wait_for_ingredients_loaded()
+        construct_page.open_ingredient_details()
+        construct_page.wait_for_ingredient_window()
+        assert construct_page.is_ingredient_window_displayed()
 
-        # Создаем заказ
-        construct_page.add_bun_to_order()
-        construct_page.wait_for_order_number()
-        construct_page.close_order_window()
+    @allure.title("Проверка закрытия модального окна ингредиента кликом на крестик")
+    def test_close_window_ingridient_click_the_cross(self, driver, urls):
+        construct_page = Construct(driver)
+        construct_page.get_urls(urls.STELLAR_BURGER_CONSTRUCT)
+        # Увеличиваем тайм-аут ожидания до 15 секунд
+        construct_page.wait_for_ingredients_loaded(timeout=15)
+        construct_page.open_ingredient_details()
+        close_button = construct_page.get_close_button()
+        construct_page.close_ingredient_details()
+        # Используем новый метод для ожидания исчезновения окна
+        construct_page.wait_for_ingredient_window_to_disappear()
+        class_name = close_button.get_attribute("class")
+        assert "Modal_modal_opened__3ISw4" not in class_name
 
-        # Переходим в ленту заказов
-        construct_page.wait_lenta_button_clickable()
-        construct_page.click_lenta_button_js_safe()
-        construct_page.wait_for_url(urls.STELLAR_BURGER_LENTA)
-
-        # Обновляем страницу и ждем
-        construct_page.refresh_page()
-        construct_page.wait_for_time(8)
-
-        # Скроллим к списку заказов
-        lenta_page.scroll_to_order_list()
-        construct_page.wait_for_time(2)
-
-        # Получаем список заказов
-        orders_after = lenta_page.get_order_list()
-
-        # Проверка: есть хотя бы один заказ
-        assert len(orders_after) > 0, "Заказ не добавлен в список 'В работе'"
-
-        # Проверяем, что номер заказа состоит только из цифр
-        latest_order = orders_after[0]
-        assert latest_order.isdigit(), f"Номер заказа должен содержать только цифры: {latest_order}"
+    @allure.title("Проверка добавления ингредиента в конструктор заказа")
+    def test_ingredient_added_to_an_order(self, driver, urls):
+        construct_page = Construct(driver)
+        construct_page.get_urls(urls.STELLAR_BURGER_CONSTRUCT)
+        construct_page.add_ingredient_to_constructor()
+        counter = construct_page.get_ingredient_counter()
+        construct_page.wait()
+        assert counter == "2"

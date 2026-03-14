@@ -5,86 +5,90 @@ from pages.lenta_page import Lenta
 import pytest
 import allure
 
-class TestLentaPage:
+
+class TestLentaPage():
+    @allure.title("Проверка перехода в Ленту заказов через кнопку в шапке сайта")
+    def test_lenta_button_click(self, driver, urls):
+        base_page = BasePage(driver)
+        base_page.get_urls(urls.STELLAR_BURGER_CONSTRUCT)
+        base_page.click_lenta_button()
+        assert base_page.current_url(urls.STELLAR_BURGER_LENTA)
+
     @pytest.mark.parametrize("counter_method", ["get_all_time_order_count", "get_today_order_count"])
     @allure.title("Проверка увеличения счетчика заказов после создания нового заказа")
-    def test_order_counter_increases_after_order(self, driver, login_user, urls, counter_method):
-        # Создаем страницы нужных классов
+    def test_create_order_increases_counter(self, driver, login_user, urls, counter_method):
         profile_page = Profile(driver)
         construct_page = Construct(driver)
         lenta_page = Lenta(driver)
 
-        # Открываем страницу ленты
-        lenta_page.open(urls.STELLAR_BURGER_LENTA)
-
-        # Получаем счетчик до создания заказа
+        lenta_page.get_urls(urls.STELLAR_BURGER_LENTA)
         count_before = getattr(lenta_page, counter_method)()
-
-        # Создаем заказ
         construct_page.click_construct_button()
         profile_page.login_in_main_page(login_user["email"], login_user["password"])
         construct_page.add_bun_to_order()
         construct_page.wait_for_order_number()
         construct_page.close_order_window()
+        construct_page.wait_lenta_button_clickable()
+        construct_page.click_lenta_button_js_safe()
+        construct_page.wait_for_url(urls.STELLAR_BURGER_LENTA)
 
-        # Обновляем страницу и ждем
         construct_page.wait_for_time(10)
         construct_page.refresh_page()
         construct_page.wait_for_time(3)
 
-        # Получаем счетчик после
         count_after = getattr(lenta_page, counter_method)()
 
-        # Проверка
         assert count_after > count_before, (
-            f"Счетчик '{counter_method}' не увеличился: было {count_before}, стало {count_after}."
+            f"Счетчик '{counter_method}' не увеличился: было {count_before}, стало {count_after}. "
+            f"Разница: {count_after - count_before}"
         )
 
-    @pytest.mark.parametrize("login_user, urls", [
-        ({"email": "test@example.com", "password": "password123"}, {"STELLAR_BURGER_CONSTRUCT": "...", "STELLAR_BURGER_LENTA": "..."}) # замените на реальные URL
-    ])
     @allure.title("Проверка добавления номера заказа в список 'В работе'")
-    def test_order_adds_to_in_progress_list(self, driver, login_user, urls):
+    def test_create_order_list_order_add_number_order(self, driver, login_user, urls):
         profile_page = Profile(driver)
         construct_page = Construct(driver)
         lenta_page = Lenta(driver)
 
-        # Зайти на страницу конструктора и авторизоваться
-        construct_page.open(urls["STELLAR_BURGER_CONSTRUCT"])
+        # Начинаем с конструктора и логинимся
+        construct_page.get_urls(urls.STELLAR_BURGER_CONSTRUCT)
         profile_page.login_in_main_page(login_user["email"], login_user["password"])
 
-        # Создать заказ
+        # Создаем заказ
         construct_page.add_bun_to_order()
         construct_page.wait_for_order_number()
         construct_page.close_order_window()
 
-        # Ждать и перейти в ленту заказов
+        # Ждем закрытия модального окна
         construct_page.wait_for_time(3)
-        construct_page.wait_lenta_button_clickable()
-        construct_page.click_lenta_button_js_safe()
-        construct_page.wait_for_url(urls["STELLAR_BURGER_LENTA"])
 
-        # Обновляем страницу
+        # Переходим в ленту заказов
+        construct_page.wait_lenta_button_clickable()
+
+        # Используем JavaScript клик для обхода перекрытия элемента
+        construct_page.click_lenta_button()
+        construct_page.wait_for_url(urls.STELLAR_BURGER_LENTA)
+
+        # Ждем обновления данных
         construct_page.wait_for_time(8)
         construct_page.refresh_page()
         construct_page.wait_for_time(8)
 
-        # Проверка, что мы на нужной странице
+        # Проверяем, что мы на правильной странице
         current_url = construct_page.get_current_url()
-        assert current_url == urls["STELLAR_BURGER_LENTA"], f"Неверный URL: {current_url}"
+        print(f"Текущий URL: {current_url}")
+        assert current_url == urls.STELLAR_BURGER_LENTA, f"Неверный URL: {current_url}"
 
-        # Скроллим к списку заказов
+        # СКРОЛЛИМ К СПИСКУ ЗАКАЗОВ перед получением
         lenta_page.scroll_to_order_list()
         construct_page.wait_for_time(2)
 
         # Получаем список заказов
         orders_after = lenta_page.get_order_list()
+        print(f"Заказов в работе после создания: {orders_after}")
 
-        # Проверка, что заказ появился
+        # Проверяем, что в списке есть хотя бы один заказ
         assert len(orders_after) > 0, "Заказ не добавлен в список 'В работе'"
 
-        # Проверка, что номер заказа состоит только из цифр
+        # Проверяем, что заказ имеет правильный формат (только цифры)
         latest_order = orders_after[0]
         assert latest_order.isdigit(), f"Номер заказа должен содержать только цифры: {latest_order}"
-
-        print(f"Заказ {latest_order} успешно добавлен в список 'В работе'")

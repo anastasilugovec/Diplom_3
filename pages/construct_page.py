@@ -4,14 +4,10 @@ from locators.base_page_locators import BasePageLocators
 from pages.base_page import BasePage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver import ActionChains
 
 class Construct(BasePage):
-    def __init__(self, driver: object) -> None:
+    def __init__(self, driver):
         super().__init__(driver)
-
-    def open(self, url):
-        self._driver.get(url)  # использовано через свойство _driver
 
     @allure.step("Создание заказа бургера")
     def create_order_burger(self, element):
@@ -44,20 +40,17 @@ class Construct(BasePage):
 
     @allure.step("Добавить булку в заказ")
     def add_bun_to_order(self):
-        wait = WebDriverWait(self._driver, 15)
-        source_element = wait.until(EC.visibility_of_element_located(ConstructPageLocators.BUN_INGRIDIENT))
-        target_element = wait.until(EC.visibility_of_element_located(ConstructPageLocators.BURGER_ORDER_LIST))
-        action = ActionChains(self._driver)
-        action.drag_and_drop(source_element, target_element).perform()
+        self.create_order_burger(ConstructPageLocators.BUN_INGRIDIENT)
 
     @allure.step("Проверить отображение текста конструктора")
     def is_burger_constructor_displayed(self):
         return self.element_is_displayed(ConstructPageLocators.TEXT_BURGER_CONSTRUCT)
 
     @allure.step("Ожидать загрузки ингредиентов")
-    def wait_for_ingredients_loaded(self):
-        self.wait_element(ConstructPageLocators.BUN_INGRIDIENT)
-        self.wait_element_clickable(ConstructPageLocators.BUN_INGRIDIENT)
+    def wait_for_ingredients_loaded(self, timeout=10):
+        wait = WebDriverWait(self.driver, timeout)
+        wait.until(EC.presence_of_element_located(ConstructPageLocators.BUN_INGRIDIENT))
+        wait.until(EC.element_to_be_clickable(ConstructPageLocators.BUN_INGRIDIENT))
 
     @allure.step("Ожидать изменения номера заказа")
     def wait_for_order_number_changed(self, initial_number):
@@ -91,7 +84,7 @@ class Construct(BasePage):
     def wait_lenta_button_clickable(self):
         self.wait_element_clickable(BasePageLocators.LENTA_ORDERS)
 
-    def create_order_burger(self, element_locator):
-        self.drag_and_drop(element_locator, ConstructPageLocators.BURGER_ORDER_LIST)
-        self.click_to_element(ConstructPageLocators.BUTTON_ORDER)
-        self.drag_and_drop(element_locator, ConstructPageLocators.BURGER_ORDER_LIST)
+    # Новый метод для ожидания исчезновения окна ингредиента
+    def wait_for_ingredient_window_to_disappear(self, timeout=10):
+        wait = WebDriverWait(self.driver, timeout)
+        wait.until(EC.invisibility_of_element_located(ConstructPageLocators.WINDOW_INGRIDIENT))

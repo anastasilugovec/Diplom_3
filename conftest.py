@@ -5,15 +5,21 @@ from webdriver_manager.chrome import ChromeDriverManager
 import requests
 from faker import Faker
 from constants import STELLAR_BURGER_CONSTRUCT, STELLAR_BURGER_LENTA
+from api import AuthAPI
+
 
 class WebdriverFactory:
     @staticmethod
-    def get_webdriver(browser_name):
+    def get_webdriver(browser_name, ignore_ssl=False):
         if browser_name == "firefox":
+            # Для Firefox можно добавить обработку ignore_ssl, если нужно
             return webdriver.Firefox()
         elif browser_name == "chrome":
+            options = webdriver.ChromeOptions()
+            if ignore_ssl:
+                options.add_argument('--ignore-certificate-errors')
             service = Service(ChromeDriverManager().install())
-            return webdriver.Chrome(service=service)
+            return webdriver.Chrome(service=service, options=options)
         else:
             raise ValueError(f"Unsupported browser: {browser_name}")
 
@@ -25,29 +31,26 @@ def pytest_addoption(parser):
 @pytest.fixture
 def driver(request):
     browser_name = request.config.getoption("--browser")
-    driver = WebdriverFactory.get_webdriver(browser_name)
+    ignore_ssl = True  # или получать из настроек, или сделать условие
+    driver = WebdriverFactory.get_webdriver(browser_name, ignore_ssl=ignore_ssl)
     driver.maximize_window()
     yield driver
     driver.quit()
 
-# Удалили фикстуру urls(), теперь используем константы
-# например:
-# from constants import STELLAR_BURGER_CONSTRUCT
 
 @pytest.fixture
-def login_user():
+def login_user(urls):
     fake = Faker(locale="ru_RU")
+
     payload = {
         "email": fake.email(),
         "password": fake.password(),
         "name": fake.name()
     }
 
-    # Регистрация пользователя
-    requests.post(f'{STELLAR_BURGER_CONSTRUCT}/api/auth/register', data=payload)
+    requests.post(f'{urls.STELLAR_BURGER_CONSTRUCT}/api/auth/register', data=payload)
 
-    # Вход пользователя
-    login_response = requests.post(f"{STELLAR_BURGER_CONSTRUCT}/api/auth/login", data={
+    login_response = requests.post(f"{urls.STELLAR_BURGER_CONSTRUCT}/api/auth/login", data={
         "email": payload["email"],
         "password": payload["password"]
     })
@@ -63,6 +66,22 @@ def login_user():
 
     yield user_data
 
-    # Удаление пользователя после теста
     headers = {"Authorization": f"Bearer {access_token}"}
-    requests.delete(f"{STELLAR_BURGER_CONSTRUCT}/api/auth/user", headers=headers)
+    requests.delete(f"{urls.STELLAR_BURGER_CONSTRUCT}/api/auth/user", headers=headers)
+
+@pytest.fixture
+def urls():
+    class Urls:
+        STELLAR_BURGER_LENTA = "https://stellarburgers.education-services.ru/feed"
+        STELLAR_BURGER_CONSTRUCT = "https://stellarburgers.education-services.ru"
+    return Urls()
+
+
+@pytest.fixture(scope="session")
+def auth_api():
+    auth = AuthAPI("https://stellarburgers.education-services.ru")
+
+    email = "boby123@yandex.ru"
+    password = "Ronv84"
+    auth.login(email, password)
+    return auth

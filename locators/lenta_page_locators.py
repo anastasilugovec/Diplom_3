@@ -1,21 +1,20 @@
 from selenium.webdriver.common.by import By
 
 
-class LentaPageLocators:
-    # Локатор для общего количества заказов за всё время
-    COUNT_ALL_TIME = (By.XPATH, "//div[contains(text(), 'Общее количество заказов')]/following-sibling::div")
+class LentaPageLocators():
+    COUNT_ALL_TIME = (By.XPATH,
+                      './/div[@class="undefined mb-15"]/p[@class="OrderFeed_number__2MbrQ text text_type_digits-large"]')  # Количество заказов за все время
 
-    # Локатор для количества заказов за сегодня
-    COUNT_TO_DAY = (By.XPATH, "//div[contains(text(), 'Заказы сегодня')]/following-sibling::div")
+    COUNT_TO_DAY = (By.XPATH,
+                    "//p[contains(text(), 'Выполнено за сегодня:')]/following-sibling::p[@class='OrderFeed_number__2MbrQ text text_type_digits-large']")  # Количество заказов за сегодня
 
-    # Локатор для списка заказов
-    LIST_ORDER = (By.CSS_SELECTOR, ".order-card")  # или другой селектор, соответствующий карточкам заказов
+    LIST_ORDER = (By.XPATH,
+                  "//ul[contains(@class, 'OrderFeed_orderListReady')]/li[contains(@class, 'text_type_digits-default')]")  # Список заказов в работе
 
-    # Локатор для текста "Все заказы готовы"
-    ALL_ORDERS_READY_TEXT = (By.XPATH, "//div[contains(text(), 'Все заказы готовы')]")
+    # Дополнительные локаторы для поиска заказов
+    ORDERS_IN_PROGRESS = (By.XPATH, "//ul[contains(@class, 'OrderFeed_orderListReady')]//li")
+    ORDER_NUMBERS = (By.CLASS_NAME, "text_type_digits-default")
+    ORDER_FEED = (By.CLASS_NAME, "OrderFeed_orderListReady")
 
-    # Локатор для секции "В работе" или другой идентификатор секции
-    IN_PROGRESS_SECTION = (By.CSS_SELECTOR, ".in-progress-section")  # пример
-
-    # Локатор для тела страницы (для получения всех текстов)
-    BODY_ELEMENT = (By.TAG_NAME, "body")
+    # Секция "В работе"
+    IN_PROGRESS_SECTION = (By.XPATH, "//p[contains(text(), 'В работе')]")

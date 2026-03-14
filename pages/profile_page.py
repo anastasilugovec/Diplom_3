@@ -10,9 +10,9 @@ class Profile(BasePage):
 
     @allure.step("Логин на главной странице")
     def login_in_main_page(self, email, password):
-        self.click_to_element_js(ConstructPageLocators.BUTTON_IN_ACCOUNT)
-        self.send_keys_to_element(ProfilePageLocators.EMAIL_INPUT, email)
-        self.send_keys_to_element(ProfilePageLocators.PASSWORD_INPUT, password)
+        self.click_to_element(ConstructPageLocators.BUTTON_IN_ACCOUNT)
+        self.send_keys(ProfilePageLocators.EMAIL_INPUT, email)
+        self.send_keys(ProfilePageLocators.PASSWORD_INPUT, password)
         self.click_to_element(ProfilePageLocators.BUTTON_LOGIN)
         self.wait_element(ConstructPageLocators.BUTTON_ORDER)
 
@@ -44,8 +44,3 @@ class Profile(BasePage):
     @allure.step("Закрыть окно заказа")
     def close_order_window(self):
         self.click_to_element_js(ConstructPageLocators.CLOSE_BUTTON_ORDER_WINDOW)
-
-    def send_keys_to_element(self, locator, text):
-        element = self.driver.find_element(*locator)
-        element.clear()
-        element.send_keys(text)
