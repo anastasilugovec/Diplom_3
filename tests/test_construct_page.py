@@ -25,12 +25,10 @@ class TestConstructPage():
     def test_close_window_ingridient_click_the_cross(self, driver, urls):
         construct_page = Construct(driver)
         construct_page.get_urls(urls.STELLAR_BURGER_CONSTRUCT)
-        # Увеличиваем тайм-аут ожидания до 15 секунд
         construct_page.wait_for_ingredients_loaded(timeout=15)
         construct_page.open_ingredient_details()
         close_button = construct_page.get_close_button()
         construct_page.close_ingredient_details()
-        # Используем новый метод для ожидания исчезновения окна
         construct_page.wait_for_ingredient_window_to_disappear()
         class_name = close_button.get_attribute("class")
         assert "Modal_modal_opened__3ISw4" not in class_name

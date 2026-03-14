@@ -49,46 +49,35 @@ class TestLentaPage():
         construct_page = Construct(driver)
         lenta_page = Lenta(driver)
 
-        # Начинаем с конструктора и логинимся
         construct_page.get_urls(urls.STELLAR_BURGER_CONSTRUCT)
         profile_page.login_in_main_page(login_user["email"], login_user["password"])
 
-        # Создаем заказ
         construct_page.add_bun_to_order()
         construct_page.wait_for_order_number()
         construct_page.close_order_window()
 
-        # Ждем закрытия модального окна
         construct_page.wait_for_time(3)
 
-        # Переходим в ленту заказов
         construct_page.wait_lenta_button_clickable()
 
-        # Используем JavaScript клик для обхода перекрытия элемента
         construct_page.click_lenta_button()
         construct_page.wait_for_url(urls.STELLAR_BURGER_LENTA)
 
-        # Ждем обновления данных
         construct_page.wait_for_time(8)
         construct_page.refresh_page()
         construct_page.wait_for_time(8)
 
-        # Проверяем, что мы на правильной странице
         current_url = construct_page.get_current_url()
         print(f"Текущий URL: {current_url}")
         assert current_url == urls.STELLAR_BURGER_LENTA, f"Неверный URL: {current_url}"
 
-        # СКРОЛЛИМ К СПИСКУ ЗАКАЗОВ перед получением
         lenta_page.scroll_to_order_list()
         construct_page.wait_for_time(2)
 
-        # Получаем список заказов
         orders_after = lenta_page.get_order_list()
         print(f"Заказов в работе после создания: {orders_after}")
 
-        # Проверяем, что в списке есть хотя бы один заказ
         assert len(orders_after) > 0, "Заказ не добавлен в список 'В работе'"
 
-        # Проверяем, что заказ имеет правильный формат (только цифры)
         latest_order = orders_after[0]
         assert latest_order.isdigit(), f"Номер заказа должен содержать только цифры: {latest_order}"

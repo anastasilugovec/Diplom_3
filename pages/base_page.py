@@ -64,11 +64,7 @@ class BasePage():
 
     @allure.step('Перетаскиваем эелемент')
     def drag_and_drop(self, source_locator, target_locator):
-        """
-        Перетаскивает элемент из source_locator в target_locator с использованием JavaScript.
-        :param source_locator: Локатор элемента, который нужно перетащить.
-        :param target_locator: Локатор элемента, куда нужно перетащить.
-        """
+
         self.find_element_with_wait(source_locator)
         self.find_element_with_wait(target_locator)
 

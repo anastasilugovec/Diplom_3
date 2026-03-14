@@ -23,7 +23,6 @@ class Lenta(BasePage):
         orders = []
 
         try:
-            # Пробуем найти реальные номера заказов (только цифры)
             elements = self.find_elements(LentaPageLocators.LIST_ORDER)
             if elements:
                 orders = [order.text for order in elements if order.text.strip() and order.text.strip().isdigit()]
@@ -32,7 +31,7 @@ class Lenta(BasePage):
         except Exception as e:
             print(f"Ошибка при поиске заказов: {e}")
 
-        # Если не нашли заказов, проверяем есть ли текст "Все заказы готовы"
+
         try:
             ready_text_element = self.find_element(LentaPageLocators.ALL_ORDERS_READY_TEXT)
             if ready_text_element:
@@ -61,19 +60,16 @@ class Lenta(BasePage):
     @allure.step("Скроллить к списку заказов")
     def scroll_to_order_list(self):
         try:
-            # Сначала пробуем найти секцию "В работе"
             self.wait_element(LentaPageLocators.IN_PROGRESS_SECTION)
             self.scroll_to_the_element(LentaPageLocators.IN_PROGRESS_SECTION)
             print("Скролл к секции 'В работе' выполнен")
         except Exception as e:
             print(f"Не удалось найти секцию 'В работе': {e}")
-            # Скролл вниз страницы
             self.driver.execute_script("window.scrollTo(0, 400);")
             print("Выполнен скролл на 400px")
 
     @allure.step("Получить все видимые тексты на странице для отладки")
     def get_all_visible_texts(self):
-        """Метод для отладки - показывает все тексты на странице"""
         try:
             body = self.find_element((By.TAG_NAME, "body"))
             return body.text
