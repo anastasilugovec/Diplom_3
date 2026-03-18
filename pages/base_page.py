@@ -2,55 +2,59 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from locators.base_page_locators import BasePageLocators
 import allure
-import time
 
-
-class BasePage():
+class BasePage:
 
     def __init__(self, driver):
         self.driver = driver
 
     @allure.step("Получаем нужную страницу")
-    def get_urls(self, element):
-        self.driver.get(element)
+    def get_urls(self, url):
+        self.driver.get(url)
 
-    @allure.step("Получаем аттрибута")
+    @allure.step("Получаем атрибут")
     def get_attribute(self, element):
-        self.get_attribute(element)
+        return self.driver.find_element(*element).get_attribute('value')
 
-    @allure.step("Скролим до нужного элемента")
+    @allure.step("Скроллим до нужного элемента")
     def scroll_to_the_element(self, locator):
         element = self.driver.find_element(*locator)
         self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
 
-    @allure.step('Ждем указанное количество секунд')
-    def wait(self, seconds=15):
-        time.sleep(seconds)
+    @allure.step("Ожидание {seconds} секунд")
+    def wait_for_time(self, seconds):
+        WebDriverWait(self.driver, seconds).until(lambda driver: False)
 
     @allure.step("Ждем появления элемента")
-    def wait_element(self, locator):
-        WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located(locator))
+    def wait_element(self, locator, timeout=15):
+        WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located(locator))
 
     @allure.step('Ждем URL')
-    def wait_url(self, url):
-        WebDriverWait(self.driver, 15).until(EC.url_contains(url))
+    def wait_url(self, url, timeout=15):
+        current_url = self.driver.current_url
+        print(f"Текущий URL перед ожиданием: {current_url}")
+        WebDriverWait(self.driver, timeout).until(EC.url_contains(url))
 
-    @allure.step("Жмем на элемент")
-    def click_to_element(self, element):
-        self.driver.find_element(*element).click()
+    def click_to_element(self, locator, timeout=30):
+        wait = WebDriverWait(self.driver, timeout)
+        element = wait.until(EC.element_to_be_clickable(locator))
+        element.click()
 
     @allure.step('Ищем элемент')
     def find_element(self, element):
         return self.driver.find_element(*element)
 
     @allure.step('Вводим значение')
-    def send_keys(self, locator, element):
-        self.driver.find_element(*locator).send_keys(element)
+    def send_keys(self, locator, value):
+        self.driver.find_element(*locator).send_keys(value)
 
     @allure.step('Проверяем что элемент появился на экране')
     def element_is_displayed(self, locator):
-        element = self.driver.find_element(*locator)
-        return element.is_displayed()
+        try:
+            element = self.driver.find_element(*locator)
+            return element.is_displayed()
+        except:
+            return False
 
     @allure.step("Ждем и находим элемент")
     def find_element_with_wait(self, locator, timeout=10):
@@ -59,12 +63,11 @@ class BasePage():
         )
 
     @allure.step('Проверяем URL')
-    def current_url(self, locator):
-        return self.driver.current_url == locator
+    def current_url(self, url):
+        return self.driver.current_url == url
 
-    @allure.step('Перетаскиваем эелемент')
+    @allure.step('Перетаскиваем элемент')
     def drag_and_drop(self, source_locator, target_locator):
-
         self.find_element_with_wait(source_locator)
         self.find_element_with_wait(target_locator)
 
@@ -98,16 +101,12 @@ class BasePage():
 
     @allure.step("Кликаем на элемент через JavaScript")
     def click_to_element_js(self, element):
-        element = self.driver.find_element(*element)
-        self.driver.execute_script("arguments[0].click();", element)
-
-    @allure.step("Ждем исчезновения элемента")
-    def wait_element_invisible(self, locator):
-        WebDriverWait(self.driver, 15).until(EC.invisibility_of_element_located(locator))
+        element_obj = self.driver.find_element(*element)
+        self.driver.execute_script("arguments[0].click();", element_obj)
 
     @allure.step("Ждем кликабельности элемента")
-    def wait_element_clickable(self, locator):
-        WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable(locator))
+    def wait_element_clickable(self, locator, timeout=15):
+        WebDriverWait(self.driver, timeout).until(EC.element_to_be_clickable(locator))
 
     @allure.step('Ищем элементы')
     def find_elements(self, locator):
@@ -116,36 +115,9 @@ class BasePage():
     @allure.step("Ждем изменения текста элемента")
     def wait_text_changed(self, locator, initial_text, timeout=15):
         WebDriverWait(self.driver, timeout).until(
-            lambda driver: driver.find_element(*locator).text != initial_text)
+            lambda driver: driver.find_element(*locator).text != initial_text
+        )
 
-    @allure.step("Нажать кнопку 'Конструктор'")
-    def click_construct_button(self):
-        self.click_to_element_js(BasePageLocators.BUTTON_CONSTRUCT)
-
-    @allure.step("Нажать кнопку 'Лента заказов'")
-    def click_lenta_button(self):
-        self.click_to_element_js(BasePageLocators.LENTA_ORDERS)
-
-    @allure.step("Нажать кнопку 'Личный кабинет'")
-    def click_account_button(self):
-        self.click_to_element(BasePageLocators.BUTTON_IN_ACCOUNT)
-
-    @allure.step("Ожидать кликабельности кнопки 'Лента заказов'")
-    def wait_lenta_button_clickable(self):
-        self.wait_element_clickable(BasePageLocators.LENTA_ORDERS)
-
-    @allure.step("Обновить страницу")
-    def refresh_page(self):
-        self.driver.refresh()
-
-    @allure.step("Ожидание указанного количества секунд")
-    def wait_for_time(self, seconds):
-        time.sleep(seconds)
-
-    @allure.step("Ожидание загрузки конкретного URL")
-    def wait_for_url(self, expected_url, timeout=10):
-        WebDriverWait(self.driver, timeout).until(EC.url_to_be(expected_url))
-
-    @allure.step("Получить текущий URL")
-    def get_current_url(self):
-        return self.driver.current_url
+    @allure.step("Кликаем по элементу")
+    def click(self, locator):
+        self.click_to_element(locator)

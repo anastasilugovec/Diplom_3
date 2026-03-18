@@ -44,3 +44,9 @@ class Profile(BasePage):
     @allure.step("Закрыть окно заказа")
     def close_order_window(self):
         self.click_to_element_js(ConstructPageLocators.CLOSE_BUTTON_ORDER_WINDOW)
+
+    @allure.step("Обновить профиль: имя и email")
+    def update_profile(self, name, email):
+        self.send_keys(ProfilePageLocators.NAME_INPUT, name)
+        self.send_keys(ProfilePageLocators.EMAIL_INPUT, email)
+        self.click(ProfilePageLocators.SAVE_BUTTON)

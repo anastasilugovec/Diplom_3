@@ -2,14 +2,17 @@ from pages.base_page import BasePage
 from pages.construct_page import Construct
 import pytest
 import allure
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from locators.construct_page_locators import ConstructPageLocators
 
-class TestConstructPage():
+class TestConstructPage:
+
     @allure.title("Проверка перехода в Конструктор через кнопку в шапке сайта")
     def test_construct_button_click(self, driver, urls):
-        base_page = BasePage(driver)
-        base_page.get_urls(urls.STELLAR_BURGER_LENTA)
-        base_page.click_construct_button()
         construct_page = Construct(driver)
+        construct_page.get_urls(urls.STELLAR_BURGER_LENTA)
+        construct_page.click_construct_button()
         assert construct_page.is_burger_constructor_displayed()
 
     @allure.title("Проверка открытия модального окна с деталями ингредиента")
@@ -27,11 +30,19 @@ class TestConstructPage():
         construct_page.get_urls(urls.STELLAR_BURGER_CONSTRUCT)
         construct_page.wait_for_ingredients_loaded(timeout=15)
         construct_page.open_ingredient_details()
-        close_button = construct_page.get_close_button()
-        construct_page.close_ingredient_details()
+
+        construct_page.close_modal()
+
+        construct_page.wait_invisibility(ConstructPageLocators.WINDOW_CROSS, timeout=15)
+
+        elements = driver.find_elements(*ConstructPageLocators.WINDOW_CROSS)
+        assert len(elements) == 0 or not elements[0].is_displayed()
+
         construct_page.wait_for_ingredient_window_to_disappear()
-        class_name = close_button.get_attribute("class")
-        assert "Modal_modal_opened__3ISw4" not in class_name
+
+
+        close_button = construct_page.get_close_button()
+        assert close_button is None, "Кнопка закрытия должна быть недоступна после закрытия окна"
 
     @allure.title("Проверка добавления ингредиента в конструктор заказа")
     def test_ingredient_added_to_an_order(self, driver, urls):
@@ -39,5 +50,4 @@ class TestConstructPage():
         construct_page.get_urls(urls.STELLAR_BURGER_CONSTRUCT)
         construct_page.add_ingredient_to_constructor()
         counter = construct_page.get_ingredient_counter()
-        construct_page.wait()
         assert counter == "2"

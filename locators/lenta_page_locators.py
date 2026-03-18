@@ -11,10 +11,12 @@ class LentaPageLocators():
     LIST_ORDER = (By.XPATH,
                   "//ul[contains(@class, 'OrderFeed_orderListReady')]/li[contains(@class, 'text_type_digits-default')]")  # Список заказов в работе
 
-    # Дополнительные локаторы для поиска заказов
     ORDERS_IN_PROGRESS = (By.XPATH, "//ul[contains(@class, 'OrderFeed_orderListReady')]//li")
     ORDER_NUMBERS = (By.CLASS_NAME, "text_type_digits-default")
     ORDER_FEED = (By.CLASS_NAME, "OrderFeed_orderListReady")
-
-    # Секция "В работе"
     IN_PROGRESS_SECTION = (By.XPATH, "//p[contains(text(), 'В работе')]")
+    LENTA_ORDERS = (By.XPATH, ".//p[text()='Лента Заказов']")
+    ALL_ORDERS_READY_TEXT = (By.XPATH, "//div[contains(text(), 'Все заказы готовы')]")
+    BODY = (By.TAG_NAME, "body")
+    LENTA_BUTTON = (By.XPATH, "//button[@class='lenta-button']")
+    LENTA_ORDERS = (By.XPATH, ".//p[text()='Лента Заказов']")

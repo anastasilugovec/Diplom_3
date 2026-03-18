@@ -6,13 +6,13 @@ import requests
 from faker import Faker
 from constants import STELLAR_BURGER_CONSTRUCT, STELLAR_BURGER_LENTA
 from api import AuthAPI
+from urls import Urls
 
 
 class WebdriverFactory:
     @staticmethod
     def get_webdriver(browser_name, ignore_ssl=False):
         if browser_name == "firefox":
-            # Для Firefox можно добавить обработку ignore_ssl, если нужно
             return webdriver.Firefox()
         elif browser_name == "chrome":
             options = webdriver.ChromeOptions()
@@ -31,7 +31,7 @@ def pytest_addoption(parser):
 @pytest.fixture
 def driver(request):
     browser_name = request.config.getoption("--browser")
-    ignore_ssl = True  # или получать из настроек, или сделать условие
+    ignore_ssl = True
     driver = WebdriverFactory.get_webdriver(browser_name, ignore_ssl=ignore_ssl)
     driver.maximize_window()
     yield driver
@@ -71,9 +71,6 @@ def login_user(urls):
 
 @pytest.fixture
 def urls():
-    class Urls:
-        STELLAR_BURGER_LENTA = "https://stellarburgers.education-services.ru/feed"
-        STELLAR_BURGER_CONSTRUCT = "https://stellarburgers.education-services.ru"
     return Urls()
 
 
