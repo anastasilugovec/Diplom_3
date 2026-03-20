@@ -5,8 +5,6 @@ from locators.profile_page_locators import ProfilePageLocators
 from pages.base_page import BasePage
 
 class Profile(BasePage):
-    def __init__(self, driver):
-        super().__init__(driver)
 
     @allure.step("Логин на главной странице")
     def login_in_main_page(self, email, password):

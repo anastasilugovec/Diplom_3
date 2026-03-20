@@ -29,12 +29,13 @@ class BasePage:
     def wait_element(self, locator, timeout=15):
         WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located(locator))
 
-    @allure.step('Ждем URL')
+    @allure.step("Ждем URL")
     def wait_url(self, url, timeout=15):
         current_url = self.driver.current_url
         print(f"Текущий URL перед ожиданием: {current_url}")
         WebDriverWait(self.driver, timeout).until(EC.url_contains(url))
 
+    @allure.step("Кликаем по элементу")
     def click_to_element(self, locator, timeout=30):
         wait = WebDriverWait(self.driver, timeout)
         element = wait.until(EC.element_to_be_clickable(locator))
@@ -121,3 +122,16 @@ class BasePage:
     @allure.step("Кликаем по элементу")
     def click(self, locator):
         self.click_to_element(locator)
+
+    @allure.step("Ожидание исчезновения элемента: {locator}")
+    def wait_invisibility(self, locator, timeout=10):
+        wait = WebDriverWait(self.driver, timeout)
+        wait.until(EC.invisibility_of_element_located(locator))
+
+    @allure.step("Получить текущий URL страницы")
+    def get_current_url(self):
+        return self.driver.current_url
+
+    @allure.step("Скролл на {pixels} пикселей")
+    def scroll_to_the_element_by_script(self, pixels):
+        self.driver.execute_script(f"window.scrollBy(0, {pixels});")

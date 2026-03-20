@@ -69,11 +69,6 @@ def login_user(urls):
     headers = {"Authorization": f"Bearer {access_token}"}
     requests.delete(f"{urls.STELLAR_BURGER_CONSTRUCT}/api/auth/user", headers=headers)
 
-@pytest.fixture
-def urls():
-    return Urls()
-
-
 @pytest.fixture(scope="session")
 def auth_api():
     auth = AuthAPI("https://stellarburgers.education-services.ru")
@@ -82,3 +77,7 @@ def auth_api():
     password = "Ronv84"
     auth.login(email, password)
     return auth
+
+@pytest.fixture
+def urls():
+    return Urls()

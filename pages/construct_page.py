@@ -5,14 +5,13 @@ from locators.base_page_locators import BasePageLocators
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+
 import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 class Construct(BasePage):
-    def __init__(self, driver):
-        super().__init__(driver)
 
     @allure.step("Создание заказа бургера")
     def create_order_burger(self, element):
@@ -72,10 +71,10 @@ class Construct(BasePage):
     def is_ingredient_window_displayed(self):
         return self.element_is_displayed(ConstructPageLocators.WINDOW_INGRIDIENT)
 
+    @allure.step("Получение кнопки закрытия окна")
     def get_close_button(self):
-        wait = WebDriverWait(self.driver, 30)
         try:
-            return wait.until(EC.presence_of_element_located(ConstructPageLocators.WINDOW_CROSS))
+            return self.find_element_with_wait(ConstructPageLocators.WINDOW_CROSS, timeout=30)
         except TimeoutException:
             return None
 
@@ -95,10 +94,12 @@ class Construct(BasePage):
     def wait_lenta_button_clickable(self):
         self.wait_element_clickable(ConstructPageLocators.LENTA_ORDERS)
 
+    @allure.step("Ожидание {seconds} секунд")
     def wait_for_time(self, seconds):
         wait = WebDriverWait(self.driver, seconds)
         wait.until(lambda driver: True)
 
+    @allure.step("Ожидание исчезновения окна с ингредиентами")
     def wait_for_ingredient_window_to_disappear(self, timeout=10):
         self.wait_invisibility(ConstructPageLocators.WINDOW_INGRIDIENT, timeout)
 
@@ -111,8 +112,9 @@ class Construct(BasePage):
         self.send_keys(BasePageLocators.NAME_FIELD, data['name'])
         self.send_keys(BasePageLocators.ADDRESS_FIELD, data['address'])
 
+    @allure.step("Нажатие безопасной кнопки Лента с помощью JS")
     def click_lenta_button_js_safe(self):
-        pass
+        self.driver.execute_script("arguments[0].click();", self.find_element(ConstructPageLocators.LENTA_ORDERS))
 
     @allure.step("Обновление страницы")
     def refresh_page(self):
@@ -120,15 +122,7 @@ class Construct(BasePage):
 
     @allure.step("Ожидаем, пока URL содержит: {url_part}")
     def wait_for_url_contains(self, url_part, timeout=10):
-        try:
-            WebDriverWait(self.driver, timeout).until(
-                EC.url_contains(url_part)
-            )
-        except TimeoutException:
-            current_url = self.driver.current_url
-            raise TimeoutException(
-                f"Не удалось дождаться, пока URL содержит '{url_part}'. Текущий URL: {current_url}"
-            )
+        self.wait_url(url_part, timeout=timeout)
 
     @allure.step("Закрываем модальное окно через JavaScript")
     def close_modal(self):
@@ -136,7 +130,3 @@ class Construct(BasePage):
         wait.until(EC.presence_of_element_located(ConstructPageLocators.WINDOW_CROSS))
         self.click_to_element_js(ConstructPageLocators.WINDOW_CROSS)
 
-    @allure.step("Ожидание исчезновения элемента: {locator}")
-    def wait_invisibility(self, locator, timeout=10):
-        wait = WebDriverWait(self.driver, timeout)
-        wait.until(EC.invisibility_of_element_located(locator))
